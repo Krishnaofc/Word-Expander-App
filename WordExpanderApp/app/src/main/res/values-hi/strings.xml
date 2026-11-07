@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">WordBoard: टेक्स्ट एक्सपैंडर</string>
+    <string name="accessibility_service_name">WordBoard शॉर्टकट एक्सपैंडर सेवा</string>
+    <string name="accessibility_service_desc">WordBoard इस एक्सेसिबिलिटी सर्विस का उपयोग केवल आपके शॉर्टकट (जैसे /addr या omw) को पहचानने और कीबोर्ड के ऊपर 1-टैप पॉपअप दिखाने या ऑटो-विस्तार करने के लिए करता है। WordBoard आपकी गोपनीयता का सम्मान करता है: कोई भी पासवर्ड या व्यक्तिगत डेटा कभी एकत्र या भेजा नहीं जाता है।</string>
+    <string name="ime_service_name">WordBoard बहुभाषी कीबोर्ड</string>
+    <string name="ime_subtype_universal">सार्वभौमिक वर्ड बोर्ड</string>
+    <string name="popup_expand_action">विस्तार करें</string>
+    <string name="popup_dismiss">हटाएं</string>
+    <string name="permission_overlay_title">कीबोर्ड पॉपअप सक्षम करें</string>
+    <string name="permission_overlay_desc">जब आप कोई शॉर्टकट टाइप करें तो आपके कीबोर्ड के ऊपर एक छोटा सा एक्सपैंड पॉपअप दिखाने की अनुमति देता है।</string>
+    <string name="permission_accessibility_title">एक्सेसिबिलिटी चालू करें</string>
+    <string name="permission_accessibility_desc">WhatsApp, Gmail, ब्राउज़र और किसी भी ऐप में शॉर्टकट पहचानने के लिए आवश्यक है।</string>
+</resources>

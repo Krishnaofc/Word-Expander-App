@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">WordBoard: Text Expander</string>
+    <string name="accessibility_service_name">WordBoard Shortcut Expander</string>
+    <string name="accessibility_service_desc">WordBoard uses this Accessibility Service solely to detect your custom text shortcut triggers (like /addr or omw) across apps and seamlessly expand them or display the 1-tap expansion pop-up above your keyboard. WordBoard respects your privacy: no keystrokes or personal data are ever recorded, stored, or transmitted over the internet.</string>
+    <string name="ime_service_name">WordBoard Multilingual Keyboard</string>
+    <string name="ime_subtype_universal">Universal Board &amp; Expander</string>
+    <string name="popup_expand_action">Expand</string>
+    <string name="popup_dismiss">Dismiss</string>
+    <string name="permission_overlay_title">Enable Overlay Pop-up</string>
+    <string name="permission_overlay_desc">Allows WordBoard to display a quick 1-tap expansion pill right above your existing keyboard when you type a shortcut.</string>
+    <string name="permission_accessibility_title">Enable Accessibility Service</string>
+    <string name="permission_accessibility_desc">Required to detect shortcuts in WhatsApp, Gmail, Chrome, and any other app.</string>
+</resources>

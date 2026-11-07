@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingStart="12dp"
+    android:paddingTop="8dp"
+    android:paddingEnd="8dp"
+    android:paddingBottom="8dp"
+    android:elevation="8dp"
+    android:background="@drawable/bg_keyboard_popup_pill">
+
+    <!-- Shortcut Badge -->
+    <TextView
+        android:id="@+id/tvPopupShortcut"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="omw"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        android:background="@drawable/bg_badge_primary"
+        android:paddingStart="8dp"
+        android:paddingTop="3dp"
+        android:paddingEnd="8dp"
+        android:paddingBottom="3dp"
+        android:maxLines="1" />
+
+    <!-- Preview Snippet Text -->
+    <TextView
+        android:id="@+id/tvPopupPreview"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:maxWidth="180dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:text="On my way! See you shortly."
+        android:textColor="#F1F5F9"
+        android:textSize="13sp" />
+
+    <!-- 1-Tap Expand Button -->
+    <Button
+        android:id="@+id/btnPopupExpand"
+        android:layout_width="wrap_content"
+        android:layout_height="36dp"
+        android:minHeight="0dp"
+        android:minWidth="0dp"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:text="@string/popup_expand_action"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        android:background="@drawable/bg_button_expand" />
+
+    <!-- Dismiss Button -->
+    <ImageButton
+        android:id="@+id/btnPopupDismiss"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginStart="4dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/popup_dismiss"
+        android:src="@android:drawable/ic_menu_close_clear_cancel"
+        android:tint="#94A3B8" />
+
+</LinearLayout>

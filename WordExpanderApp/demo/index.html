@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WordBoard: Universal Text Expander & Keyboard Pop-up Simulator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;600;700&family=Noto+Sans+Arabic:wght@400;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card-bg: #131b2e;
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --accent: #10b981;
+      --amber: #f59e0b;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: #232f48;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', 'Noto Sans Devanagari', 'Noto Sans Arabic', 'Noto Sans JP', sans-serif; }
+    body {
+      background: radial-gradient(circle at top, #1e1b4b 0%, #0b0f19 60%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 16px;
+    }
+    .header {
+      text-align: center;
+      max-width: 860px;
+      margin-bottom: 20px;
+    }
+    .header h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #a5b4fc, #6366f1, #38bdf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 6px;
+    }
+    .header p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+    .badge-pill {
+      display: inline-block;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #34d399;
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .main-layout {
+      display: flex;
+      gap: 28px;
+      max-width: 1200px;
+      width: 100%;
+      justify-content: center;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    /* Phone Device Simulator */
+    .phone-wrapper {
+      width: 380px;
+      height: 740px;
+      background: #000;
+      border: 12px solid #1e293b;
+      border-radius: 46px;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 40px rgba(99, 102, 241, 0.2);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    .phone-speaker {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 90px;
+      height: 18px;
+      background: #0f172a;
+      border-radius: 12px;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .camera-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #000;
+      border: 1.5px solid #334155;
+    }
+
+    .phone-screen {
+      flex: 1;
+      background: #090d16;
+      display: flex;
+      flex-direction: column;
+      padding-top: 36px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .app-topbar {
+      padding: 10px 16px;
+      background: #111827;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #1f2937;
+    }
+    .app-topbar .title {
+      font-weight: 700;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .app-topbar .active-status {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.72rem;
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .dot-pulse {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent);
+    }
+
+    .chat-area {
+      flex: 1;
+      padding: 14px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .msg-bubble {
+      max-width: 84%;
+      padding: 10px 14px;
+      border-radius: 16px;
+      font-size: 0.84rem;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+    .msg-received {
+      background: #1f2937;
+      color: #e5e7eb;
+      align-self: flex-start;
+      border-bottom-left-radius: 4px;
+    }
+    .msg-sent {
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      color: #fff;
+      align-self: flex-end;
+      border-bottom-right-radius: 4px;
+      animation: popIn 0.25s ease-out;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+    @keyframes popIn {
+      from { transform: scale(0.85); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .input-row {
+      padding: 8px 10px;
+      background: #111827;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-top: 1px solid #1f2937;
+    }
+    .input-row input {
+      flex: 1;
+      background: #1f2937;
+      border: 1px solid #374151;
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      outline: none;
+      transition: border 0.15s;
+    }
+    .input-row input:focus {
+      border-color: var(--primary);
+    }
+    .send-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--primary);
+      border: none;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: transform 0.1s, background 0.15s;
+      flex-shrink: 0;
+    }
+    .send-btn:hover {
+      background: var(--primary-hover);
+    }
+    .send-btn:active {
+      transform: scale(0.92);
+    }
+
+    /* FLOATING POPUP PILL */
+    .floating-popup-wrapper {
+      background: #0f172a;
+      padding: 8px 10px;
+      display: flex;
+      justify-content: center;
+      border-top: 1px solid rgba(99, 102, 241, 0.35);
+      min-height: 54px;
+      transition: all 0.2s;
+    }
+    .popup-pill {
+      background: #1e293b;
+      border: 1.5px solid var(--primary);
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+      border-radius: 24px;
+      padding: 6px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      animation: slideUp 0.2s ease-out;
+      width: 100%;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(8px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .popup-badge {
+      background: #4f46e5;
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 8px;
+      white-space: nowrap;
+    }
+    .popup-badge.typo {
+      background: #d97706;
+    }
+    .popup-preview {
+      flex: 1;
+      font-size: 0.78rem;
+      color: #f1f5f9;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .popup-expand-btn {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 14px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+      transition: transform 0.1s;
+    }
+    .popup-expand-btn:active {
+      transform: scale(0.95);
+    }
+    .popup-dismiss {
+      background: none;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 0.95rem;
+      padding: 2px 4px;
+    }
+
+    /* Virtual Keyboard */
+    .virtual-keyboard {
+      background: #141c2c;
+      padding: 8px 4px 14px 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .kb-row {
+      display: flex;
+      justify-content: center;
+      gap: 4px;
+    }
+    .kb-key {
+      background: #25334c;
+      color: #f8fafc;
+      border: none;
+      border-radius: 6px;
+      height: 38px;
+      min-width: 28px;
+      flex: 1;
+      font-size: 0.85rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.1s, transform 0.05s;
+    }
+    .kb-key:active {
+      background: #3b82f6;
+      transform: scale(0.96);
+    }
+    .kb-key.action-key {
+      background: #1b263b;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .kb-key.space-key {
+      flex: 4;
+    }
+
+    /* Controls Panel */
+    .controls-panel {
+      flex: 1;
+      min-width: 320px;
+      max-width: 620px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 20px;
+    }
+    .card h3 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      line-height: 1.45;
+    }
+
+    /* Category Tabs */
+    .category-tabs {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+    }
+    .cat-btn {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: var(--text-muted);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+    .cat-btn.active, .cat-btn:hover {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .test-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      min-height: 140px;
+      align-content: flex-start;
+    }
+    .test-chip {
+      background: #1e293b;
+      border: 1px solid #334155;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      color: #e2e8f0;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .test-chip:hover {
+      background: #3b82f6;
+      border-color: #3b82f6;
+      color: #fff;
+    }
+    .test-chip span.code {
+      font-weight: 700;
+      color: #818cf8;
+    }
+    .test-chip:hover span.code {
+      color: #fff;
+    }
+
+    .stats-bar {
+      display: flex;
+      justify-content: space-between;
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-top: 14px;
+    }
+    .stat-box {
+      text-align: center;
+    }
+    .stat-box .num {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--accent);
+    }
+    .stat-box .lbl {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .instructions-box {
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+      font-size: 0.82rem;
+      color: #cbd5e1;
+      line-height: 1.5;
+    }
+    .instructions-box strong {
+      color: #a5b4fc;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="badge-pill">✓ Fixed & Fully Tested Simulator</div>
+    <h1>WordBoard Universal Text Expander</h1>
+    <p>Click any shortcut chip on the right, or type directly in the box, then press <strong>Expand</strong> or <strong>Send (➤)</strong>!</p>
+  </div>
+
+  <div class="main-layout">
+
+    <!-- Phone Simulator -->
+    <div class="phone-wrapper">
+      <div class="phone-speaker"><div class="camera-dot"></div></div>
+      <div class="phone-screen">
+
+        <div class="app-topbar">
+          <div class="title">💬 WhatsApp / Chat App</div>
+          <div class="active-status"><span class="dot-pulse"></span> WordBoard Active</div>
+        </div>
+
+        <div class="chat-area" id="chatArea">
+          <div class="msg-bubble msg-received">Namaste! Choose any category on the right, click a shortcut chip, or type directly!</div>
+        </div>
+
+        <div class="input-row">
+          <input type="text" id="phoneInput" placeholder="Type shortcut or click chip..." autocomplete="off">
+          <button class="send-btn" id="sendBtn" title="Send Message">➤</button>
+        </div>
+
+        <!-- FLOATING KEYBOARD POP-UP PILL -->
+        <div class="floating-popup-wrapper" id="popupWrapper" style="display: none;">
+          <div class="popup-pill" id="popupPill">
+            <span class="popup-badge" id="popupBadge">omw</span>
+            <span class="popup-preview" id="popupPreview">On my way! See you shortly.</span>
+            <button class="popup-expand-btn" id="popupExpandBtn">Expand</button>
+            <button class="popup-dismiss" id="popupDismissBtn" title="Dismiss">✕</button>
+          </div>
+        </div>
+
+        <!-- Virtual Mobile Keyboard -->
+        <div class="virtual-keyboard">
+          <div class="kb-row">
+            <button class="kb-key" data-key="q">q</button>
+            <button class="kb-key" data-key="w">w</button>
+            <button class="kb-key" data-key="e">e</button>
+            <button class="kb-key" data-key="r">r</button>
+            <button class="kb-key" data-key="t">t</button>
+            <button class="kb-key" data-key="y">y</button>
+            <button class="kb-key" data-key="u">u</button>
+            <button class="kb-key" data-key="i">i</button>
+            <button class="kb-key" data-key="o">o</button>
+            <button class="kb-key" data-key="p">p</button>
+          </div>
+          <div class="kb-row">
+            <button class="kb-key" data-key="a">a</button>
+            <button class="kb-key" data-key="s">s</button>
+            <button class="kb-key" data-key="d">d</button>
+            <button class="kb-key" data-key="f">f</button>
+            <button class="kb-key" data-key="g">g</button>
+            <button class="kb-key" data-key="h">h</button>
+            <button class="kb-key" data-key="j">j</button>
+            <button class="kb-key" data-key="k">k</button>
+            <button class="kb-key" data-key="l">l</button>
+          </div>
+          <div class="kb-row">
+            <button class="kb-key action-key" data-action="shift">⇧</button>
+            <button class="kb-key" data-key="z">z</button>
+            <button class="kb-key" data-key="x">x</button>
+            <button class="kb-key" data-key="c">c</button>
+            <button class="kb-key" data-key="v">v</button>
+            <button class="kb-key" data-key="b">b</button>
+            <button class="kb-key" data-key="n">n</button>
+            <button class="kb-key" data-key="m">m</button>
+            <button class="kb-key action-key" data-action="backspace">⌫</button>
+          </div>
+          <div class="kb-row">
+            <button class="kb-key action-key" data-key="/">/addr</button>
+            <button class="kb-key space-key" data-action="space">Space</button>
+            <button class="kb-key" data-key=".">.</button>
+            <button class="kb-key action-key" data-action="enter">Enter</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Controls Panel -->
+    <div class="controls-panel">
+
+      <div class="card">
+        <h3>🚀 Choose Category & Click Any Shortcut</h3>
+        
+        <div class="instructions-box">
+          👉 <strong>Kaise use karein:</strong><br>
+          1. Niche kisi bhi chip par click karein (jaise <code>nmt</code>, <code>omw</code>, ya <code>teh</code>).<br>
+          2. Keyboard ke upar green <strong>"Expand"</strong> button aayega — use dabayein, ya direct <strong>"➤ Send"</strong> dabayein!
+        </div>
+        
+        <!-- Category Filter Tabs -->
+        <div class="category-tabs" id="categoryTabs">
+          <button class="cat-btn active" data-cat="hindi" onclick="switchCategory('hindi', this)">🇮🇳 Hindi (12)</button>
+          <button class="cat-btn" data-cat="daily" onclick="switchCategory('daily', this)">💬 Daily Chat (14)</button>
+          <button class="cat-btn" data-cat="business" onclick="switchCategory('business', this)">💼 Office & Email (10)</button>
+          <button class="cat-btn" data-cat="support" onclick="switchCategory('support', this)">🎧 Customer Care (5)</button>
+          <button class="cat-btn" data-cat="arabic" onclick="switchCategory('arabic', this)">🇸🇦 Arabic / Urdu (6)</button>
+          <button class="cat-btn" data-cat="spanish" onclick="switchCategory('spanish', this)">🇪🇸 Spanish (5)</button>
+          <button class="cat-btn" data-cat="japanese" onclick="switchCategory('japanese', this)">🇯🇵 Japanese (5)</button>
+          <button class="cat-btn" data-cat="chinese" onclick="switchCategory('chinese', this)">🇨🇳 Chinese (3)</button>
+          <button class="cat-btn" data-cat="bengali" onclick="switchCategory('bengali', this)">🇧🇩 Bengali & South (6)</button>
+          <button class="cat-btn" data-cat="typos" onclick="switchCategory('typos', this)">⚠️ Galat Words / Typos (15)</button>
+        </div>
+
+        <!-- Chips Container -->
+        <div class="test-chips" id="chipsContainer"></div>
+
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+          <div class="stat-box">
+            <div class="num">100+</div>
+            <div class="lbl">Preloaded Phrases</div>
+          </div>
+          <div class="stat-box">
+            <div class="num">70+</div>
+            <div class="lbl">Auto-Typo Fixes</div>
+          </div>
+          <div class="stat-box">
+            <div class="num">160+</div>
+            <div class="lbl">Scripts (UTF-8)</div>
+          </div>
+          <div class="stat-box">
+            <div class="num">Ready</div>
+            <div class="lbl">Send Status</div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="card">
+        <h3>✨ Smart Auto-Expand Feature</h3>
+        <p>Agar aap shortcut likhkar <strong>"Expand"</strong> button nahi bhi dabate aur seedha <strong>"Send (➤)"</strong> ya <strong>Enter</strong> daba dete hain, to WordBoard apne aap use expand karke message send kar deta hai!</p>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    // Comprehensive multilingual phrases database
+    const database = {
+      hindi: [
+        { code: 'nmt', text: 'नमस्ते! आप कैसे हैं? आशा है आपका दिन बहुत अच्छा और मंगलमय हो।', label: 'नमस्ते अभिवादन' },
+        { code: 'dhny', text: 'आपका बहुत-बहुत धन्यवाद! आपके बहुमूल्य सहयोग की हम सराहना करते हैं।', label: 'धन्यवाद' },
+        { code: 'shubh', text: 'हार्दिक बधाई एवं ढेरों शुभकामनाएं! ईश्वर आपको सदा सफल और खुश रखे।', label: 'शुभकामनाएं' },
+        { code: 'ramram', text: 'राम-राम जी! सब कुशल मंगल? घर-परिवार में सब ठीक?', label: 'राम-राम' },
+        { code: 'radhe', text: 'राधे-राधे! आपका दिन शुभ और सुखमय हो।', label: 'राधे-राधे' },
+        { code: 'pranam', text: 'सादर प्रणाम! आपके आशीर्वाद की कामना करता हूँ।', label: 'सादर प्रणाम' },
+        { code: 'shukriya', text: 'आपका तहे दिल से शुक्रिया! बहुत-बहुत मेहरबानी।', label: 'शुक्रिया' },
+        { code: 'alvida', text: 'अलविदा! अपना बहुत अच्छे से ख्याल रखिएगा, फिर मिलते हैं।', label: 'अलविदा' },
+        { code: 'keseho', text: 'और भाई कैसे हो? सब कैसा चल रहा है आजकल?', label: 'कैसे हो' },
+        { code: 'thikhai', text: 'हाँ जी बिल्कुल ठीक है, जैसा आप कहें।', label: 'ठीक है' },
+        { code: 'kripya', text: 'कृपया करके मुझे इसके बारे में थोड़ा और विस्तार से बताएं।', label: 'कृपया बताएं' },
+        { code: 'badhai', text: 'इस शानदार उपलब्धि पर आपको और आपके पूरे परिवार को बहुत-बहुत बधाई!', label: 'उपलब्धि बधाई' }
+      ],
+      daily: [
+        { code: 'omw', text: 'On my way! See you shortly.', label: 'On My Way' },
+        { code: 'gm', text: 'Good morning! Hope you have a wonderful and productive day ahead ☀️', label: 'Good Morning' },
+        { code: 'gn', text: 'Good night! Sleep well and sweet dreams 🌙', label: 'Good Night' },
+        { code: 'hru', text: 'Hey! How have you been doing lately?', label: 'How Are You' },
+        { code: 'tc', text: 'Take care of yourself! Talk to you soon.', label: 'Take Care' },
+        { code: 'brb', text: 'Be right back in a few minutes!', label: 'Be Right Back' },
+        { code: 'idk', text: 'I do not know for sure, let me check and get back to you.', label: 'I Dont Know' },
+        { code: 'imo', text: 'In my honest opinion,', label: 'In My Opinion' },
+        { code: 'tysm', text: 'Thank you so much! I really appreciate your help 🙏', label: 'Thank You' },
+        { code: 'yw', text: 'You are most welcome! Always happy to help.', label: 'Youre Welcome' },
+        { code: 'np', text: 'No problem at all! Glad I could help.', label: 'No Problem' },
+        { code: 'hbd', text: 'Wishing you a very Happy Birthday! May you have an amazing year 🎉🎂', label: 'Happy Birthday' },
+        { code: 'cya', text: 'See you later! Have a great time.', label: 'See You' },
+        { code: 'asap', text: 'As soon as possible, please.', label: 'ASAP' }
+      ],
+      business: [
+        { code: '/addr', text: 'Tower B, 7th Floor, Innovation Tech Hub, Sector 62, Noida, UP - 201301', label: 'Office Address' },
+        { code: 'eml', text: 'contact.official@mycompany.com', label: 'Work Email' },
+        { code: 'phn', text: '+91 98765 43210', label: 'Phone Number' },
+        { code: '/meeting', text: 'Hi Team, Let us sync up today to review sprint goals. Best regards,', label: 'Meeting Invite' },
+        { code: '/followup', text: 'Dear Sir/Madam, I am following up on our previous project discussion. Warm regards,', label: 'Email Follow-up' },
+        { code: '/intro', text: 'Hello, My name is Rahul. We specialize in software solutions. Would love to connect.', label: 'Cold Outreach' },
+        { code: '/leave', text: 'Respected Manager, I am writing to formally request leave for today due to urgent personal circumstances.', label: 'Leave Request' },
+        { code: '/thanks', text: 'Thank you for reaching out to us. We will get back to you within 24 hours.', label: 'Query Thanks' },
+        { code: '/sig', text: '--\nBest regards,\nGopal Sharma | Senior Architect\nPhone: +91 98765 43210', label: 'Email Signature' },
+        { code: '/upi', text: 'gopal.sharma@okaxis (Please share screenshot after payment)', label: 'UPI Details' }
+      ],
+      support: [
+        { code: '/welcome', text: 'Welcome to our support! 👋 My name is Alex. How may I assist you today?', label: 'Customer Welcome' },
+        { code: '/refund', text: 'Your refund request has been initiated. Amount will be credited within 5-7 business days.', label: 'Refund Status' },
+        { code: '/shipping', text: 'Your order has been dispatched and is on its way! Track live via your registered mobile SMS.', label: 'Shipping' },
+        { code: '/discount', text: 'Use coupon code FESTIVE20 at checkout for an instant 20% discount!', label: 'Discount Coupon' },
+        { code: '/hours', text: 'Support hours: Mon - Sat 9:00 AM to 8:00 PM IST. Feel free to message anytime!', label: 'Support Hours' }
+      ],
+      arabic: [
+        { code: 'slm', text: 'السلام عليكم ورحمة الله وبركاته، أتمنى لك يوماً سعيداً ومليئاً بالخير.', label: 'السلام عليكم' },
+        { code: 'shkr', text: 'شكراً جزيلاً لك على دعمك ومساعدتك القيمة! بارك الله فيك.', label: 'شكر وتقدير' },
+        { code: 'afw', text: 'عفواً، لا شكر على واجب! في خدمتك دائماً.', label: 'عفواً' },
+        { code: 'insha', text: 'إن شاء الله، كل الأمور ستكون على خير ما يرام.', label: 'إن شاء الله' },
+        { code: 'masha', text: 'ما شاء الله تبارك الرحمن! ألف مبروك لك.', label: 'ما شاء الله' },
+        { code: 'jazak', text: 'جزاك الله خيراً وأحسن إليك في الدنيا والآخرة.', label: 'جزاك الله خيراً' }
+      ],
+      spanish: [
+        { code: 'hla', text: '¡Hola! ¿Cómo estás? Espero que tengas un excelente y productivo día.', label: 'Hola' },
+        { code: 'grc', text: '¡Muchas gracias por tu amable atención y ayuda! Te lo agradezco de corazón.', label: 'Gracias' },
+        { code: 'porfa', text: 'Por favor, ¿podrías compartir más información cuando tengas un momento?', label: 'Por favor' },
+        { code: 'buenos', text: '¡Buenos días! Espero que hayas descansado muy bien.', label: 'Buenos Días' },
+        { code: 'adios', text: '¡Hasta luego! Cuídate mucho y que tengas una gran semana.', label: 'Despedida' }
+      ],
+      japanese: [
+        { code: 'arig', text: '誠にありがとうございます。今後とも何卒よろしくお願い申し上げます。', label: 'ありがとうございます' },
+        { code: 'otsk', text: 'お疲れ様です！本日もご対応いただき、誠にありがとうございました。', label: 'お疲れ様です' },
+        { code: 'ohay', text: 'おはようございます！今日も一日、よろしくお願いいたします。', label: 'おはようございます' },
+        { code: 'konn', text: 'こんにちは！ご確認のほどよろしくお願い申し上げます。', label: 'こんにちは' },
+        { code: 'yoroshiku', text: 'どうぞよろしくお願いいたします。', label: 'よろしくお願い' }
+      ],
+      chinese: [
+        { code: 'xiexie', text: '非常感谢您的耐心帮助与大力支持，祝您工作顺利、万事如意！', label: '非常感谢' },
+        { code: 'nihao', text: '您好！很高兴与您取得联系，请问有什么可以协助您的？', label: '您好问候' },
+        { code: 'zaijian', text: '再见！祝您度过愉快充实的一天，保持联系。', label: '再见道别' }
+      ],
+      bengali: [
+        { code: 'shubho', text: 'শুভকামনা এবং আন্তরিক অভিনন্দন! আপনার ভবিষ্যৎ উজ্জ্বল হোক।', label: 'শুভকামনা (Bengali)' },
+        { code: 'dhonnobad', text: 'আপনাকে অনেক অনেক ধন্যবাদ আপনার অমূল্য সহযোগিতার জন্য!', label: 'ধন্যবাদ (Bengali)' },
+        { code: 'kemon', text: 'কেমন আছেন আপনি? আশা করি সবকিছু ভালো চলছে।', label: 'কেমন আছেন (Bengali)' },
+        { code: 'vanakkam', text: 'வணக்கம்! நீங்கள் எப்படி இருக்கிறீர்கள்? உங்கள் நாள் இனிய நாளாக அமையட்டும்.', label: 'வணக்கம் (Tamil)' },
+        { code: 'namaskaram', text: 'నమస్కారం! మీరు ఎలా ఉన్నారు? మీ రోజు శుభప్రదంగా ఉండాలని కోరుకుంటున్నాను.', label: 'నమస్కారం (Telugu)' },
+        { code: 'satshriakal', text: 'ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ ਜੀ! ਸਭ ਸੁੱਖ ਸਾਂਦ ਹੈ? ਵਾਹਿਗੁਰੂ ਮਿਹਰ ਕਰੇ।', label: 'ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ (Punjabi)' }
+      ],
+      typos: [
+        { code: 'teh', text: 'the', label: 'teh -> the', isTypo: true },
+        { code: 'recieve', text: 'receive', label: 'recieve -> receive', isTypo: true },
+        { code: 'seperate', text: 'separate', label: 'seperate -> separate', isTypo: true },
+        { code: 'becuase', text: 'because', label: 'becuase -> because', isTypo: true },
+        { code: 'definately', text: 'definitely', label: 'definately -> definitely', isTypo: true },
+        { code: 'untill', text: 'until', label: 'untill -> until', isTypo: true },
+        { code: 'wich', text: 'which', label: 'wich -> which', isTypo: true },
+        { code: 'adn', text: 'and', label: 'adn -> and', isTypo: true },
+        { code: 'tommorrow', text: 'tomorrow', label: 'tommorrow -> tomorrow', isTypo: true },
+        { code: 'wierd', text: 'weird', label: 'wierd -> weird', isTypo: true },
+        { code: 'nmaste', text: 'नमस्ते', label: 'nmaste -> नमस्ते', isTypo: true },
+        { code: 'sukriya', text: 'शुक्रिया', label: 'sukriya -> शुक्रिया', isTypo: true },
+        { code: 'dhnyawad', text: 'धन्यवाद', label: 'dhnyawad -> धन्यवाद', isTypo: true },
+        { code: 'kese', text: 'कैसे', label: 'kese -> कैसे', isTypo: true },
+        { code: 'alwida', text: 'अलविदा', label: 'alwida -> अलविदा', isTypo: true }
+      ]
+    };
+
+    // Flatten database for lookup
+    const allSnippets = {};
+    Object.values(database).forEach(catList => {
+      catList.forEach(item => {
+        allSnippets[item.code.toLowerCase()] = item;
+      });
+    });
+
+    const phoneInput = document.getElementById('phoneInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const chatArea = document.getElementById('chatArea');
+    const popupWrapper = document.getElementById('popupWrapper');
+    const popupBadge = document.getElementById('popupBadge');
+    const popupPreview = document.getElementById('popupPreview');
+    const popupExpandBtn = document.getElementById('popupExpandBtn');
+    const popupDismissBtn = document.getElementById('popupDismissBtn');
+    const chipsContainer = document.getElementById('chipsContainer');
+
+    let currentMatch = null;
+
+    function switchCategory(catKey, btnElement) {
+      document.querySelectorAll('.cat-btn').forEach(btn => btn.classList.remove('active'));
+      if (btnElement) {
+        btnElement.classList.add('active');
+      } else {
+        const defaultBtn = document.querySelector(`.cat-btn[data-cat="${catKey}"]`);
+        if (defaultBtn) defaultBtn.classList.add('active');
+      }
+
+      const items = database[catKey] || [];
+      chipsContainer.innerHTML = '';
+
+      items.forEach(item => {
+        const btn = document.createElement('button');
+        btn.className = 'test-chip';
+        btn.innerHTML = `<span class="code">${item.code}</span> <span>${item.label}</span>`;
+        btn.onclick = () => simulateTyping(item.code);
+        chipsContainer.appendChild(btn);
+      });
+    }
+
+    function checkShortcut(val) {
+      if (!val) {
+        currentMatch = null;
+        popupWrapper.style.display = 'none';
+        return;
+      }
+
+      const words = val.trim().split(/\s+/);
+      const lastWord = words[words.length - 1] || '';
+      const match = allSnippets[lastWord] || allSnippets[lastWord.toLowerCase()];
+
+      if (match) {
+        currentMatch = { word: lastWord, data: match };
+        popupBadge.innerText = match.isTypo ? 'Fix: ' + lastWord : lastWord;
+        popupBadge.className = 'popup-badge' + (match.isTypo ? ' typo' : '');
+        popupPreview.innerText = match.text;
+        popupWrapper.style.display = 'flex';
+      } else {
+        currentMatch = null;
+        popupWrapper.style.display = 'none';
+      }
+    }
+
+    function expandCurrent() {
+      if (!currentMatch) return;
+      const text = phoneInput.value;
+      const word = currentMatch.word;
+      const replacement = currentMatch.data.text;
+
+      const lastIdx = text.lastIndexOf(word);
+      if (lastIdx !== -1) {
+        phoneInput.value = text.substring(0, lastIdx) + replacement;
+      } else {
+        phoneInput.value = replacement;
+      }
+      popupWrapper.style.display = 'none';
+      currentMatch = null;
+      phoneInput.focus();
+    }
+
+    function sendMessage() {
+      let val = phoneInput.value.trim();
+      if (!val) return;
+
+      // Smart Auto-Expand on Send: if shortcut popup is active, expand it automatically!
+      if (currentMatch) {
+        const word = currentMatch.word;
+        const replacement = currentMatch.data.text;
+        const lastIdx = val.lastIndexOf(word);
+        if (lastIdx !== -1) {
+          val = val.substring(0, lastIdx) + replacement;
+        } else {
+          val = replacement;
+        }
+      }
+
+      // Append Sent message bubble
+      const msg = document.createElement('div');
+      msg.className = 'msg-bubble msg-sent';
+      msg.innerText = val;
+      chatArea.appendChild(msg);
+
+      // Reset input & hide popup
+      phoneInput.value = '';
+      popupWrapper.style.display = 'none';
+      currentMatch = null;
+      chatArea.scrollTop = chatArea.scrollHeight;
+
+      // Automated simulated response for realistic chat feel
+      setTimeout(() => {
+        const reply = document.createElement('div');
+        reply.className = 'msg-bubble msg-received';
+        reply.innerText = "Received! 👍 Text expansion worked perfectly.";
+        chatArea.appendChild(reply);
+        chatArea.scrollTop = chatArea.scrollHeight;
+      }, 700);
+    }
+
+    function simulateTyping(word) {
+      phoneInput.value = word;
+      checkShortcut(word);
+      phoneInput.focus();
+    }
+
+    // Attach Event Listeners
+    popupExpandBtn.addEventListener('click', expandCurrent);
+    popupDismissBtn.addEventListener('click', () => {
+      popupWrapper.style.display = 'none';
+      currentMatch = null;
+    });
+
+    phoneInput.addEventListener('input', (e) => {
+      checkShortcut(e.target.value);
+    });
+
+    phoneInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    sendBtn.addEventListener('click', sendMessage);
+
+    // Virtual keyboard button listeners
+    document.querySelectorAll('.kb-key').forEach(key => {
+      key.addEventListener('click', () => {
+        const char = key.dataset.key;
+        const action = key.dataset.action;
+
+        if (char) {
+          phoneInput.value += char;
+        } else if (action === 'space') {
+          phoneInput.value += ' ';
+        } else if (action === 'backspace') {
+          phoneInput.value = phoneInput.value.slice(0, -1);
+        } else if (action === 'enter') {
+          sendMessage();
+          return;
+        }
+        checkShortcut(phoneInput.value);
+      });
+    });
+
+    // Safely load initial Hindi category on start
+    window.addEventListener('DOMContentLoaded', () => {
+      switchCategory('hindi');
+    });
+  </script>
+</body>
+</html>
